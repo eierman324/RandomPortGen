@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RandomPortGen</title>
+  <meta name="description" content="Zufällige, freie Ports für deine Projekte – mit Port-Scan, Sperrlisten und Snippets.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23e8a33d'/><text x='16' y='22' font-family='monospace' font-size='15' font-weight='700' text-anchor='middle' fill='%23161412'>:P</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="logo">:P</span>
+      <div>
+        <h1>RandomPortGen</h1>
+        <p class="tagline">Nie wieder überlegen, welchen Port du nimmst.</p>
+      </div>
+    </div>
+    <span id="scanBadge" class="badge">Scanner wird gesucht…</span>
+  </header>
+
+  <main class="layout">
+    <!-- Ergebnis -->
+    <section class="card result" aria-live="polite">
+      <div class="result-head">
+        <h2 id="resultTitle">Dein Port</h2>
+        <span id="modeNote" class="muted small"></span>
+      </div>
+      <ul id="ports" class="ports"></ul>
+      <p id="error" class="error" hidden></p>
+      <div class="actions">
+        <button id="roll" class="btn primary">Würfeln <kbd>Leertaste</kbd></button>
+        <button id="copyAll" class="btn">Alle kopieren <kbd>C</kbd></button>
+        <button id="rescan" class="btn ghost">Neu prüfen</button>
+      </div>
+    </section>
+
+    <!-- Einstellungen -->
+    <section class="card settings">
+      <h2>Einstellungen</h2>
+
+      <div class="field">
+        <span class="label">Bereich</span>
+        <div id="presets" class="segmented" role="radiogroup"></div>
+        <div class="range-inputs">
+          <label>von <input id="min" type="number" min="1" max="65535"></label>
+          <label>bis <input id="max" type="number" min="1" max="65535"></label>
+        </div>
+        <p id="rangeHint" class="muted small"></p>
+      </div>
+
+      <div class="field row">
+        <label class="grow">
+          <span class="label">Anzahl</span>
+          <input id="count" type="number" min="1" max="20" value="1">
+        </label>
+        <label class="check">
+          <input id="consecutive" type="checkbox">
+          <span>aufeinanderfolgend</span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label>
+          <span class="label">Projektname <span class="muted">(optional)</span></span>
+          <input id="project" type="text" placeholder="z. B. mein-shop" autocomplete="off" spellcheck="false">
+        </label>
+        <p class="muted small">Mit Projektnamen bekommst du immer dieselben Ports. Sie werden aus dem Namen berechnet.</p>
+      </div>
+
+      <div class="field toggles">
+        <span class="label">Filter</span>
+        <label class="check"><input id="avoidKnown" type="checkbox" checked><span>Bekannte Ports meiden <span class="muted">(3000, 5432, 8080 …)</span></span></label>
+        <label class="check"><input id="avoidHistory" type="checkbox" checked><span>Schon verwendete Ports meiden</span></label>
+        <label class="check"><input id="avoidEphemeral" type="checkbox" checked><span>Ephemeral-Bereich des Systems meiden</span></label>
+        <label class="check"><input id="onlyFree" type="checkbox" checked><span>Nur freie Ports <span class="muted">(belegte werden ersetzt)</span></span></label>
+        <label class="check"><input id="nice" type="checkbox"><span>Nur „schöne“ Ports <span class="muted">(4242, 7777, 12321 …)</span></span></label>
+        <p class="muted small">Von Browsern gesperrte Ports (z. B. 6000, 6667, 10080) sind immer ausgeschlossen.</p>
+      </div>
+    </section>
+
+    <!-- Snippets -->
+    <section class="card snippets">
+      <h2>Snippets</h2>
+      <div id="snippetTabs" class="tabs" role="tablist"></div>
+      <div class="code-wrap">
+        <pre id="snippet"><code></code></pre>
+        <button id="copySnippet" class="btn small copy-snippet">Kopieren</button>
+      </div>
+    </section>
+
+    <!-- Nachschlagen -->
+    <section class="card lookup">
+      <h2>Port nachschlagen</h2>
+      <form id="lookupForm" class="inline-form">
+        <input id="lookupPort" type="number" min="1" max="65535" placeholder="z. B. 8080" required>
+        <button class="btn">Prüfen</button>
+      </form>
+      <dl id="lookupResult" class="facts"></dl>
+    </section>
+
+    <!-- System -->
+    <section class="card system">
+      <h2>Dein System</h2>
+      <div id="systemInfo" class="muted">Lade…</div>
+    </section>
+
+    <!-- Verlauf -->
+    <section class="card history">
+      <div class="result-head">
+        <h2>Verlauf</h2>
+        <button id="clearHistory" class="btn small ghost">Leeren</button>
+      </div>
+      <ul id="history" class="history-list"></ul>
+    </section>
+  </main>
+
+  <footer class="foot muted small">
+    Reiner Browser-Check ist ungenau. Für einen echten Scan: <code>node server.js</code> starten und <a href="http://localhost:27183">localhost:27183</a> öffnen.
+  </footer>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="ports.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
