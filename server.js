@@ -64,7 +64,7 @@ async function checkPort(port) {
     if (res === "EAFNOSUPPORT" || res === "EADDRNOTAVAIL") continue; // kein IPv6 vorhanden
     return { port, status: "unknown", detail: `Fehler ${res} (${host})` };
   }
-  return { port, status: "free", detail: "Frei" };
+  return { port, status: "free", detail: "" };
 }
 
 async function checkPorts(ports) {

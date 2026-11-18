@@ -129,25 +129,27 @@
     return Promise.all(ports.map(browserProbe));
   }
 
-  // Ohne Server: versuchen, http://127.0.0.1:PORT zu laden. Findet nur HTTP-Dienste.
+  // Ohne Server: versuchen, http://127.0.0.1:PORT zu laden.
   async function browserProbe(port) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 1500);
     try {
       await fetch(`http://127.0.0.1:${port}/`, { mode: "no-cors", cache: "no-store", signal: ctrl.signal });
-      return { port, status: "used", detail: "Ein HTTP-Dienst antwortet (Browser-Check)" };
+      return { port, status: "likely-used", detail: "" };
     } catch (e) {
-      if (e.name === "AbortError") return { port, status: "unknown", detail: "Keine Antwort in 1,5 s (Browser-Check)" };
-      return { port, status: "likely-free", detail: "Keine HTTP-Antwort – wahrscheinlich frei (Browser-Check ist ungenau)" };
+      // Keine Antwort in 1,5 s: Da nimmt wohl etwas die Verbindung an, spricht aber kein HTTP.
+      if (e.name === "AbortError") return { port, status: "likely-used", detail: "" };
+      return { port, status: "likely-free", detail: "" };
     } finally {
       clearTimeout(timer);
     }
   }
 
   const STATUS_LABEL = {
-    checking: "prüfe…", free: "frei", used: "belegt", reserved: "reserviert",
-    "likely-free": "wahrscheinlich frei", unknown: "unklar",
+    checking: "prüfe…", free: "wahrscheinlich frei", used: "belegt", reserved: "reserviert",
+    "likely-free": "wahrscheinlich frei", "likely-used": "wahrscheinlich belegt", unknown: "–",
   };
+  const isTaken = (s) => s === "used" || s === "reserved" || s === "likely-used";
 
   // ---------- Generieren ----------
   async function roll() {
@@ -172,7 +174,7 @@
     if (!project && settings.onlyFree) {
       const bad = new Set();
       for (let round = 0; round < 8; round++) {
-        const used = results.filter((r) => r.status === "used" || r.status === "reserved");
+        const used = results.filter((r) => isTaken(r.status));
         if (!used.length) break;
         used.forEach((r) => bad.add(r.port));
         const keep = results.filter((r) => !bad.has(r.port));
@@ -408,11 +410,12 @@
 
     let res;
     if (BROWSER_BLOCKED.has(port) && !backend) {
-      res = { status: "unknown", detail: "Browser darf diesen Port nicht prüfen" };
+      res = { status: "unknown", detail: "" };
     } else {
       [res] = await scan([port]);
     }
-    rows[rows.length - 1] = ["Status", `${STATUS_LABEL[res.status] || res.status} – ${res.detail}`];
+    const label = STATUS_LABEL[res.status] || res.status;
+    rows[rows.length - 1] = ["Status", res.detail ? `${label} – ${res.detail}` : label];
 
     if (backend && res.status === "used") {
       try {
@@ -438,14 +441,9 @@
     const box = $("systemInfo");
     const badge = $("scanBadge");
     if (!backend) {
-      badge.textContent = "Browser-Check (ungenau)";
-      badge.className = "badge warn";
-      box.innerHTML = "";
-      const p = document.createElement("p");
-      p.textContent = "Kein lokaler Scanner gefunden. Der Browser kann nur HTTP-Dienste erkennen, Datenbanken & Co. bleiben unsichtbar.";
-      const p2 = document.createElement("p");
-      p2.innerHTML = "Für einen echten Scan im Projektordner <code>node server.js</code> starten und <code>http://localhost:27183</code> öffnen.";
-      box.append(p, p2);
+      // Ohne lokalen Server gibt es keine Systeminfos: Abzeichen und Karte ausblenden
+      badge.hidden = true;
+      box.closest(".card").hidden = true;
       return;
     }
     badge.textContent = "Lokaler Scanner aktiv";

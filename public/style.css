@@ -136,8 +136,9 @@ h1 { font-size: 1.35rem; letter-spacing: -0.01em; }
 }
 .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .pill.free { color: var(--free); background: var(--free-bg); border-color: transparent; }
-.pill.used, .pill.reserved { color: var(--used); background: var(--used-bg); border-color: transparent; }
-.pill.likely-free, .pill.unknown { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
+.pill.used, .pill.reserved, .pill.likely-used { color: var(--used); background: var(--used-bg); border-color: transparent; }
+.pill.likely-free { color: var(--free); background: var(--free-bg); border-color: transparent; }
+.pill.unknown { color: var(--warn); background: var(--warn-bg); border-color: transparent; }
 .pill.checking::before { animation: blink 0.8s infinite alternate; }
 @keyframes blink { to { opacity: 0.2; } }
 
