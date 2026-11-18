@@ -11,7 +11,8 @@ const { execFile } = require("child_process");
 
 const PORT = Number(process.env.PORT) || 27183;
 const HOST = "127.0.0.1"; // bewusst nur lokal erreichbar
-const PUBLIC_DIR = path.join(__dirname, "public");
+// Nur diese Dateien werden ausgeliefert (server.js, .git usw. bleiben privat)
+const PUBLIC_FILES = new Set(["/index.html", "/app.js", "/ports.js", "/style.css"]);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -145,7 +146,7 @@ async function whoUses(port) {
 
 // ---------- Zufall (für die Text-API) ----------
 
-require("./public/ports.js"); // setzt globalThis.BROWSER_BLOCKED und KNOWN_PORTS
+require("./ports.js"); // setzt globalThis.BROWSER_BLOCKED und KNOWN_PORTS
 
 async function apiCandidates(min, max) {
   const info = await systemInfo();
@@ -222,10 +223,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Statische Dateien
-    let file = decodeURIComponent(url.pathname);
-    if (file === "/") file = "/index.html";
-    const full = path.normalize(path.join(PUBLIC_DIR, file));
-    if (!full.startsWith(PUBLIC_DIR)) return send(res, 403, "forbidden", "text/plain");
+    const file = url.pathname === "/" ? "/index.html" : url.pathname;
+    if (!PUBLIC_FILES.has(file)) return send(res, 404, "not found", "text/plain");
+    const full = path.join(__dirname, file);
     fs.readFile(full, (err, data) => {
       if (err) return send(res, 404, "not found", "text/plain");
       res.writeHead(200, { "Content-Type": MIME[path.extname(full)] || "application/octet-stream" });
